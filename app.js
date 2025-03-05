@@ -20,24 +20,33 @@ document.getElementById('boton').addEventListener('click', function() {
     }
 });
 
+// Verificar si hay datos en caché al cargar la página
+document.addEventListener("DOMContentLoaded", function() {
+    const cachedWeather = localStorage.getItem("weatherData");
+    const cachedForecast = localStorage.getItem("forecastData");
+
+    if (cachedWeather) {
+        showWeather(JSON.parse(cachedWeather));
+    }
+    if (cachedForecast) {
+        showForecast(JSON.parse(cachedForecast));
+    }
+});
+
 async function getWeather(city) {
     const apiKey = '1afc9034d97a6ede82d14e177d189e5f';
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=es`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ES`;
 
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error('Ciudad no encontrada');
         const data = await response.json();
 
-        document.getElementById('cityName').textContent = data.name;
-        document.getElementById('temperature').textContent = `${data.main.temp}°C`;
-        document.getElementById('description').textContent = data.weather[0].description;
-        document.getElementById('humidity').textContent = data.main.humidity;
-        document.getElementById('windSpeed').textContent = data.wind.speed;
-        document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
-        
-        const fecha = new Date();
-        document.getElementById('date').textContent = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+        // Guardar en caché
+        localStorage.setItem("weatherData", JSON.stringify(data));
+
+        // Mostrar en la interfaz
+        showWeather(data);
 
     } catch (error) {
         alert(error.message);
@@ -53,15 +62,37 @@ async function getForecast(city) {
         if (!response.ok) throw new Error('No se pudo obtener el pronóstico');
         const data = await response.json();
 
-        const forecastDays = [6, 12, 20]; // Datos de cada 8 horas para 3 días
-        forecastDays.forEach((time, index) => {
-            const dayData = data.list[time];
-            document.getElementById(`day${index + 1}`).textContent = new Date(dayData.dt * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-            document.getElementById(`temp${index + 1}`).textContent = `${dayData.main.temp}°C`;
-            document.getElementById(`icon${index + 1}`).src = `https://openweathermap.org/img/wn/${dayData.weather[0].icon}.png`;
-        });
+        // Guardar en caché
+        localStorage.setItem("forecastData", JSON.stringify(data));
+
+        // Mostrar en la interfaz
+        showForecast(data);
 
     } catch (error) {
         console.error(error);
     }
+}
+
+// Función para mostrar datos en la interfaz
+function showWeather(data) {
+    document.getElementById('cityName').textContent = data.name;
+    document.getElementById('temperature').textContent = `${data.main.temp}°C`;
+    document.getElementById('description').textContent = data.weather[0].description;
+    document.getElementById('humidity').textContent = data.main.humidity;
+    document.getElementById('windSpeed').textContent = data.wind.speed;
+    document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+
+    const fecha = new Date();
+    document.getElementById('date').textContent = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+}
+
+function showForecast(data) {
+    const forecastDays = [6, 12, 20]; // Datos de cada 8 horas para 3 días
+
+    forecastDays.forEach((time, index) => {
+        const dayData = data.list[time];
+        document.getElementById(`day${index + 1}`).textContent = new Date(dayData.dt * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        document.getElementById(`temp${index + 1}`).textContent = `${dayData.main.temp}°C`;
+        document.getElementById(`icon${index + 1}`).src = `https://openweathermap.org/img/wn/${dayData.weather[0].icon}.png`;
+    });
 }
