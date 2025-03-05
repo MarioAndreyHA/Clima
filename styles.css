@@ -1,6 +1,6 @@
 body {
     background: url('img/fondo.jpg') no-repeat center center fixed;
-    background-size: cover;
+    background-size: auto;
     font-family: Arial, sans-serif;
     height: 100vh;
     margin: 0;
